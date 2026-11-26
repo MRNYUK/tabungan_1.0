@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f18ab7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Pinky Wallet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='44' fill='%23f18ab7'/%3E%3Ctext x='96' y='124' font-size='104' text-anchor='middle'%3E%F0%9F%8E%80%3C/text%3E%3C/svg%3E">
+  <title>Pinky Wallet 2.5 🎀</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- LAYAR REGISTRASI & LOGIN -->
+  <section class="auth-gate" id="authGate" aria-label="Autentikasi Pinky Wallet">
+    <div class="auth-card">
+      <div class="auth-badge">🎀</div>
+      <p class="eyebrow">PINKY WALLET ACCOUNT</p>
+      <h1 id="authTitle">Daftar Akun Baru</h1>
+      <p class="subtext" id="authSubtitle">Buat username dan password (pastikan password dan konfirmasi password sama).</p>
+
+      <form id="authForm" class="auth-form">
+        <div>
+          <label for="authUsername">Username</label>
+          <input id="authUsername" maxlength="35" required placeholder="Contoh: Rina" autocomplete="username">
+        </div>
+        <div>
+          <label for="authPassword">Password</label>
+          <div class="password-wrap">
+            <input id="authPassword" type="password" maxlength="50" required placeholder="Masukkan password" autocomplete="current-password">
+            <button type="button" class="eye-btn" data-toggle-pass="authPassword" aria-label="Lihat atau sembunyikan password">👁️</button>
+          </div>
+        </div>
+        <div id="confirmPasswordGroup">
+          <label for="authPasswordConfirm">Konfirmasi Password</label>
+          <div class="password-wrap">
+            <input id="authPasswordConfirm" type="password" maxlength="50" placeholder="Ketik ulang password" autocomplete="new-password">
+            <button type="button" class="eye-btn" data-toggle-pass="authPasswordConfirm" aria-label="Lihat atau sembunyikan konfirmasi password">👁️</button>
+          </div>
+        </div>
+        <p class="auth-error" id="authError" hidden></p>
+        <button class="btn btn-primary auth-submit" type="submit" id="authSubmitBtn">Daftar & Masuk 💗</button>
+      </form>
+
+      <div class="auth-footer-actions" id="authResetWrap" hidden>
+        <button type="button" class="link-btn" id="resetAccountBtn">Lupa akun / Daftar ulang</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- APLIKASI UTAMA -->
+  <div id="appRoot" hidden>
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark">🎀</span>
+        <span><strong>Pinky Wallet</strong><small>Manage your money beautifully</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="today-chip" id="todayLabel"></span>
+        <button class="btn btn-light btn-small" id="installAppBtn" type="button" hidden>📲 Install App</button>
+        <button class="btn btn-light btn-small" id="logoutBtn" type="button" title="Keluar dari akun">Keluar</button>
+        <button class="icon-btn" id="themeToggle" type="button" title="Ganti tema" aria-label="Ganti tema">🌙</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="welcome-row">
+        <div>
+          <p class="eyebrow">YOUR PERSONAL FINANCE SPACE</p>
+          <h1>Halo, <span id="welcomeName">money planner</span>! 💗 <img id="welcomeAvatar" class="welcome-avatar" alt="Foto profil" hidden></h1>
+          <p class="subtext">Atur uangmu sedikit demi sedikit, sampai tujuanmu tercapai.</p>
+        </div>
+        <div class="quick-add">
+          <button class="btn btn-primary" id="addIncomeBtn" type="button">＋ Pemasukan</button>
+          <button class="btn btn-light" id="addExpenseBtn" type="button">－ Pengeluaran</button>
+        </div>
+      </section>
+
+      <section class="overview-grid">
+        <article class="balance-card">
+          <div class="card-topline"><span>Total Saldo Kamu</span><span class="card-emoji">💗</span></div>
+          <p class="balance-value" id="balance">Rp0</p>
+          <div class="balance-foot"><span>Saldo dari seluruh transaksi</span><span class="balance-sparkle">✦ ✧ ✦</span></div>
+        </article>
+        <article class="metric-card income-card">
+          <div class="metric-icon">↗</div><span>Total Pemasukan</span><strong id="income">Rp0</strong><small>Semua pemasukan tercatat</small>
+        </article>
+        <article class="metric-card expense-card">
+          <div class="metric-icon">↘</div><span>Total Pengeluaran</span><strong id="expense">Rp0</strong><small>Semua pengeluaran tercatat</small>
+        </article>
+      </section>
+
+      <nav class="section-nav" aria-label="Navigasi fitur">
+        <a href="#calendarSection">📅 Kalender</a>
+        <a href="#analyticsSection">📊 Analisis</a>
+        <a href="#budgetSection">🎯 Anggaran</a>
+        <a href="#challengeSection">🌷 Tantangan</a>
+        <a href="#recurringSection">🔔 Pengingat</a>
+        <a href="#exportSection">📥 Export</a>
+        <a href="#walletSection">👛 Dompet</a>
+        <a href="#debtSection">🤝 Utang</a>
+        <a href="#settingsSection">⚙️ Kustomisasi</a>
+      </nav>
+
+      <section class="panel" id="transactionPanel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">TRANSACTION</p><h2 id="formTitle">Tambah Transaksi</h2></div><button class="icon-btn close-btn" id="closeFormBtn" type="button" aria-label="Tutup">×</button></div>
+        <div class="preset-strip">
+          <div class="preset-header">
+            <span>⚡ Template Cepat (1-Klik Isi)</span>
+            <button class="tiny-btn" type="button" id="openPresetDialogBtn">＋ Simpan Template</button>
+          </div>
+          <div id="presetList" class="preset-chips"></div>
+        </div>
+        <form id="transactionForm" class="form-grid">
+          <div><label for="type">Jenis Transaksi</label><select id="type"><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></div>
+          <div><label for="category">Kategori</label><select id="category"></select></div>
+          <div class="span-2"><label for="description">Nama Transaksi / Barang</label><input id="description" maxlength="90" required placeholder="Contoh: Makan siang"></div>
+          <div><label for="amount">Jumlah Uang (Rp)</label><input id="amount" type="text" inputmode="numeric" data-money-input required placeholder="50.000"></div>
+          <div><label for="date">Tanggal</label><input id="date" type="date" required></div>
+          <div><label for="transactionWallet">Dompet</label><select id="transactionWallet"></select></div>
+          <div class="span-2"><label for="transactionNote">Catatan (opsional)</label><input id="transactionNote" maxlength="180" placeholder="Detail tambahan..."></div>
+          <div class="span-2"><label for="transactionPhoto">Foto bukti (opsional)</label><input id="transactionPhoto" type="file" accept="image/*"><small class="field-help">Maksimal 1,2 MB per foto. Foto disimpan di browser perangkat ini.</small><div id="photoPreview"></div></div>
+          <div class="form-actions span-2"><button class="btn btn-primary" type="submit">Simpan Transaksi 💗</button><button class="btn btn-light" id="cancelFormBtn" type="button">Batal</button></div>
+        </form>
+      </section>
+
+      <section class="content-grid" id="calendarSection">
+        <article class="panel calendar-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">PLAN YOUR CASH FLOW</p><h2>Kalender Keuangan 📅</h2></div>
+            <div class="month-controls"><button class="icon-btn" id="prevMonth" type="button" aria-label="Bulan sebelumnya">‹</button><strong id="calendarMonthLabel"></strong><button class="icon-btn" id="nextMonth" type="button" aria-label="Bulan berikutnya">›</button></div>
+          </div>
+          <div class="calendar-legend"><span><i class="legend-dot income-dot"></i>Pemasukan</span><span><i class="legend-dot expense-dot"></i>Pengeluaran</span></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="selected-day-box">
+            <div class="selected-day-heading"><strong id="selectedDateLabel">Transaksi hari ini</strong><span id="selectedDayTotal"></span></div>
+            <div id="selectedDayTransactions" class="mini-transactions"><p class="empty-state">Pilih tanggal untuk melihat transaksi.</p></div>
+          </div>
+        </article>
+
+        <article class="panel history-panel">
+          <div class="panel-heading"><div><p class="eyebrow">YOUR MONEY TRAIL</p><h2>Riwayat Transaksi 🧾</h2></div></div>
+          <div class="filter-grid">
+            <input type="search" id="historySearch" class="span-2" placeholder="🔍 Cari nama transaksi atau catatan..." aria-label="Cari transaksi">
+            <input type="month" id="historyMonth" aria-label="Filter bulan riwayat">
+            <select id="filterType" aria-label="Filter jenis"><option value="all">Semua jenis</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select>
+            <select id="filterCategory" class="span-2" aria-label="Filter kategori"><option value="all">Semua kategori</option></select>
+          </div>
+          <div id="transactionList" class="transaction-list"></div>
+        </article>
+      </section>
+
+      <section class="panel" id="analyticsSection">
+        <div class="panel-heading analytics-heading"><div><p class="eyebrow">UNDERSTAND YOUR HABITS</p><h2>Statistik & Analisis 📊</h2></div><input class="month-input" type="month" id="analyticsMonth" aria-label="Bulan analisis"></div>
+        <div class="analytics-summary" id="analyticsSummary"></div>
+        <div class="chart-card trend-card">
+          <div class="trend-top">
+            <div class="subheading"><strong>Tren Harian Bulan Ini</strong><small id="trendHoverInfo">Arahkan atau klik titik hari untuk melihat nominal</small></div>
+            <div class="calendar-legend"><span><i class="legend-dot expense-dot"></i>Pengeluaran</span><span><i class="legend-dot income-dot"></i>Pemasukan</span></div>
+          </div>
+          <canvas id="dailyTrendCanvas" height="190" aria-label="Grafik tren harian"></canvas>
+        </div>
+        <div class="analytics-grid">
+          <div class="chart-card"><div class="subheading"><strong>Pengeluaran per kategori</strong><small>Bulan yang dipilih</small></div><div id="categoryChart" class="category-chart"></div></div>
+          <div class="insight-card"><div class="subheading"><strong>Money insight ✨</strong><small>Ringkasan kebiasaanmu</small></div><div id="insights"></div></div>
+        </div>
+      </section>
+
+      <section class="panel" id="budgetSection">
+        <div class="panel-heading">
+          <div><p class="eyebrow">STAY WITHIN LIMITS</p><h2>Anggaran Bulanan per Kategori 🎯</h2></div>
+          <button class="btn btn-primary btn-small" id="addBudgetBtn" type="button">＋ Atur Anggaran</button>
+        </div>
+        <div id="budgetList" class="budget-grid"></div>
+        <p class="helper-note">Anggaran dihitung otomatis dari pengeluaran pada bulan yang sedang dipilih di bagian Statistik & Analisis.</p>
+      </section>
+
+      <section class="panel" id="walletSection">
+        <div class="panel-heading">
+          <div><p class="eyebrow">YOUR MONEY, ORGANIZED</p><h2>Multi Dompet 👛</h2></div>
+          <button class="btn btn-primary btn-small" id="addWalletBtn" type="button">＋ Dompet</button>
+        </div>
+        <div id="walletList" class="wallet-grid"></div>
+        <p class="helper-note">Transaksi lama otomatis masuk ke dompet Tunai. Saldo total tetap dihitung seperti sebelumnya.</p>
+      </section>
+
+      <section class="panel" id="debtSection"><div class="panel-heading"><div><p class="eyebrow">TRACK YOUR BALANCE</p><h2>Manajemen Utang & Piutang 🤝</h2></div><button class="btn btn-primary btn-small" id="addDebtBtn" type="button">＋ Catat</button></div><div id="debtSummary" class="debt-summary"></div><div id="debtList" class="debt-grid"></div></section>
+
+      <section class="panel" id="challengeSection">
+        <div class="panel-heading"><div><p class="eyebrow">SMALL STEPS, BIG DREAMS</p><h2>Tantangan Menabung 🌷</h2></div><button class="btn btn-primary btn-small" id="addChallengeBtn" type="button">＋ Tantangan</button></div>
+        <div id="challengeList" class="challenge-grid"></div>
+        <div class="helper-note">Tips: catat setoran saat kamu benar-benar menyisihkan uang. Progres tantangan tidak otomatis mengubah saldo transaksi.</div>
+      </section>
+
+      <section class="panel" id="recurringSection">
+        <div class="panel-heading"><div><p class="eyebrow">DON'T MISS A PAYMENT</p><h2>Pengingat Transaksi Rutin 🔔</h2></div><button class="btn btn-primary btn-small" id="addRecurringBtn" type="button">＋ Pengingat</button></div>
+        <div id="recurringList" class="recurring-list"></div>
+        <div class="helper-note">Status jatuh tempo akan terlihat saat kamu membuka aplikasi. Pengingat ini tidak mengirim notifikasi ketika browser tertutup.</div>
+      </section>
+
+      <section class="panel" id="settingsSection">
+        <div class="panel-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2>Kustomisasi Tampilan & Kategori 🎨</h2></div></div>
+        <div class="settings-grid">
+          <div><label for="currencySelect">Mata uang</label><select id="currencySelect"><option value="IDR">Rupiah (IDR)</option><option value="USD">US Dollar (USD)</option><option value="MYR">Ringgit (MYR)</option><option value="SGD">Singapore Dollar (SGD)</option></select></div>
+          <div><label for="accentSelect">Warna utama</label><select id="accentSelect"><option value="pink">Pink</option><option value="purple">Lavender</option><option value="blue">Biru</option><option value="mint">Mint</option><option value="peach">Peach</option></select></div>
+          <div>
+            <label for="themeStyleSelect">Gaya tema</label>
+            <select id="themeStyleSelect">
+              <option value="classic">Classic Soft</option>
+              <option value="ios18-glass">iOS 18 Glass 🫧</option>
+              <option value="bento">Bento Studio 🍱</option>
+              <option value="cozy-paper">Cozy Paper 📖</option>
+              <option value="cyber-pastel">Neon Cyber Pastel ⚡</option>
+              <option value="minimal-flat">Minimalist Flat 🤍</option>
+            </select>
+          </div>
+          <div><label for="profileName">Nama sapaan</label><input id="profileName" maxlength="35" placeholder="Money planner"></div>
+          <div class="span-2">
+            <label>Info Gaya Tema</label>
+            <div class="theme-live-preview" id="themeLivePreview">
+              <div class="preview-card-mini">
+                <div class="preview-top">
+                  <span class="preview-badge" id="previewStyleBadge">Classic Soft</span>
+                  <span class="preview-accent-dot" id="previewAccentDot"></span>
+                </div>
+                <strong id="previewStyleTitle">Lembut & Hangat</strong>
+                <small id="previewStyleDesc">Sudut membulat ramah dengan bayangan pastel yang kalem.</small>
+              </div>
+            </div>
+          </div>
+          <div class="span-2"><label for="profilePhoto">Foto profil</label><input id="profilePhoto" type="file" accept="image/*"><div id="profilePreview"></div></div>
+        </div>
+        <div class="settings-actions"><button class="btn btn-primary" id="saveSettingsBtn" type="button">Simpan</button><button class="btn btn-light" id="resetSettingsBtn" type="button">Reset tampilan</button></div>
+
+        <div class="custom-cat-box">
+          <div class="subheading"><strong>Kategori Custom 🏷️</strong><small>Buat kategori sendiri dengan emoji pilihanmu</small></div>
+          <form id="customCategoryForm" class="custom-cat-form">
+            <select id="customCatType" aria-label="Jenis kategori custom">
+              <option value="expense">Pengeluaran</option>
+              <option value="income">Pemasukan</option>
+            </select>
+            <input id="customCatEmoji" maxlength="4" value="✨" aria-label="Emoji kategori" placeholder="✨">
+            <input id="customCatName" maxlength="25" required placeholder="Nama kategori (mis. Peliharaan)" aria-label="Nama kategori custom">
+            <button class="btn btn-primary btn-small" type="submit">＋ Tambah</button>
+          </form>
+          <div id="customCategoryList" class="custom-cat-tags"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="exportSection">
+        <div class="panel-heading"><div><p class="eyebrow">KEEP YOUR RECORDS</p><h2>Export Laporan 📥</h2></div></div>
+        <div class="export-row">
+          <div class="export-copy"><strong>Excel (.xlsx)</strong><small>Unduh daftar transaksi dan ringkasan keuangan.</small></div>
+          <button class="btn btn-primary" id="exportExcelBtn" type="button">Export Excel</button>
+        </div>
+        <div class="export-row">
+          <div class="export-copy"><strong>PDF</strong><small>Buka tampilan cetak, lalu pilih “Save as PDF”.</small></div>
+          <button class="btn btn-light" id="exportPdfBtn" type="button">Export PDF</button>
+        </div>
+        <div class="export-row">
+          <div class="export-copy"><strong>Backup data (JSON)</strong><small>Simpan semua transaksi, tantangan, anggaran, dan pengingat.</small></div>
+          <button class="btn btn-light" id="backupBtn" type="button">Backup JSON</button>
+        </div>
+        <div class="export-row">
+          <div class="export-copy"><strong>Restore data (JSON)</strong><small>Pulihkan data dari file backup Pinky Wallet.</small></div>
+          <label class="btn btn-light file-button" for="restoreInput">Pilih File<input id="restoreInput" type="file" accept=".json,application/json" hidden></label>
+        </div>
+        <div class="export-row">
+          <div class="export-copy"><strong>Hapus semua data</strong><small>Bersihkan seluruh transaksi, dompet tambahan, utang, anggaran, dan tantangan.</small></div>
+          <button class="btn btn-light danger-btn" id="wipeAllDataBtn" type="button">Reset Data</button>
+        </div>
+      </section>
+
+      <footer>Made with 💗 Pinky Wallet 2.5 <span>• Data tersimpan di browser/perangkat ini</span></footer>
+    </main>
+
+    <dialog id="presetDialog" class="modal">
+      <form id="presetForm" method="dialog">
+        <div class="modal-heading"><h3>Simpan Template Cepat ⚡</h3><button class="icon-btn" type="button" data-close="presetDialog">×</button></div>
+        <label for="presetName">Nama template</label><input id="presetName" maxlength="50" required placeholder="Contoh: Kopi pagi">
+        <div class="form-grid">
+          <div><label for="presetType">Jenis</label><select id="presetType"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select></div>
+          <div><label for="presetCategory">Kategori</label><select id="presetCategory"></select></div>
+        </div>
+        <label for="presetAmount">Jumlah (Rp)</label><input id="presetAmount" type="text" inputmode="numeric" data-money-input required placeholder="20.000">
+        <label for="presetNote">Catatan (opsional)</label><input id="presetNote" maxlength="120" placeholder="Opsional...">
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">Simpan Template</button><button class="btn btn-light" type="button" data-close="presetDialog">Batal</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="challengeDialog" class="modal">
+      <form id="challengeForm" method="dialog">
+        <div class="modal-heading"><h3 id="challengeDialogTitle">Buat Tantangan</h3><button class="icon-btn" type="button" data-close="challengeDialog">×</button></div>
+        <input type="hidden" id="challengeId">
+        <label for="challengeName">Nama tantangan</label><input id="challengeName" maxlength="60" required placeholder="Contoh: Dana liburan">
+        <div class="form-grid"><div><label for="challengeTarget">Target (Rp)</label><input id="challengeTarget" type="text" inputmode="numeric" data-money-input required placeholder="1.000.000"></div><div><label for="challengeDeadline">Target tanggal</label><input id="challengeDeadline" type="date"></div></div>
+        <label for="challengeNote">Catatan (opsional)</label><input id="challengeNote" maxlength="100" placeholder="Sedikit demi sedikit ✨">
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-light" type="button" data-close="challengeDialog">Batal</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="contributeDialog" class="modal">
+      <form id="contributeForm" method="dialog">
+        <div class="modal-heading"><h3>Tambah Setoran 💗</h3><button class="icon-btn" type="button" data-close="contributeDialog">×</button></div>
+        <input type="hidden" id="contributeChallengeId">
+        <p class="modal-description" id="contributeChallengeName"></p>
+        <label for="contributeAmount">Jumlah setoran (Rp)</label><input id="contributeAmount" type="text" inputmode="numeric" data-money-input required placeholder="50.000">
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">Tambah Setoran</button><button class="btn btn-light" type="button" data-close="contributeDialog">Batal</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="recurringDialog" class="modal">
+      <form id="recurringForm" method="dialog">
+        <div class="modal-heading"><h3 id="recurringDialogTitle">Buat Pengingat</h3><button class="icon-btn" type="button" data-close="recurringDialog">×</button></div>
+        <input type="hidden" id="recurringId">
+        <label for="recurringName">Nama transaksi</label><input id="recurringName" maxlength="70" required placeholder="Contoh: Tagihan internet">
+        <div class="form-grid"><div><label for="recurringAmount">Jumlah (Rp)</label><input id="recurringAmount" type="text" inputmode="numeric" data-money-input required placeholder="150.000"></div><div><label for="recurringCategory">Kategori</label><select id="recurringCategory"></select></div></div>
+        <div class="form-grid"><div><label for="recurringFrequency">Frekuensi</label><select id="recurringFrequency"><option value="monthly">Setiap bulan</option><option value="weekly">Setiap minggu</option><option value="yearly">Setiap tahun</option></select></div><div><label for="recurringNextDate">Jatuh tempo berikutnya</label><input id="recurringNextDate" type="date" required></div></div>
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">Simpan Pengingat</button><button class="btn btn-light" type="button" data-close="recurringDialog">Batal</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="walletDialog" class="modal"><form id="walletForm" method="dialog"><div class="modal-heading"><h3>Tambah Dompet 👛</h3><button class="icon-btn" type="button" data-close="walletDialog">×</button></div><label for="walletName">Nama dompet</label><input id="walletName" maxlength="35" required placeholder="Contoh: BCA, DANA, Tunai"><label for="walletKind">Jenis</label><select id="walletKind"><option>Uang tunai</option><option>Rekening bank</option><option>E-wallet</option><option>Tabungan</option><option>Lainnya</option></select><div class="modal-actions"><button class="btn btn-primary" type="submit">Tambah</button><button class="btn btn-light" type="button" data-close="walletDialog">Batal</button></div></form></dialog>
+
+    <dialog id="budgetDialog" class="modal">
+      <form id="budgetForm" method="dialog">
+        <div class="modal-heading"><h3>Atur Anggaran Kategori 🎯</h3><button class="icon-btn" type="button" data-close="budgetDialog">×</button></div>
+        <label for="budgetCategory">Kategori Pengeluaran</label><select id="budgetCategory"></select>
+        <label for="budgetLimit">Batas Anggaran per Bulan (Rp)</label><input id="budgetLimit" type="text" inputmode="numeric" data-money-input required placeholder="500.000">
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">Simpan Anggaran</button><button class="btn btn-light" type="button" data-close="budgetDialog">Batal</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="debtDialog" class="modal"><form id="debtForm" method="dialog"><div class="modal-heading"><h3 id="debtDialogTitle">Catat Utang / Piutang</h3><button class="icon-btn" type="button" data-close="debtDialog">×</button></div><input type="hidden" id="debtId"><label for="debtType">Jenis</label><select id="debtType"><option value="owe">Utang (aku harus bayar)</option><option value="owed">Piutang (orang harus bayar aku)</option></select><label for="debtPerson">Nama orang / pihak</label><input id="debtPerson" maxlength="60" required><label for="debtDescription">Keterangan</label><input id="debtDescription" maxlength="90"><div class="form-grid"><div><label for="debtAmount">Jumlah awal</label><input id="debtAmount" type="text" inputmode="numeric" data-money-input required placeholder="100.000"></div><div><label for="debtDueDate">Jatuh tempo</label><input id="debtDueDate" type="date"></div></div><div class="modal-actions"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-light" type="button" data-close="debtDialog">Batal</button></div></form></dialog>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
